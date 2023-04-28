@@ -115,23 +115,25 @@ def process_csv(csv_in_fn: str = "example.csv", csv_out_fn: str = "example-out.c
         csv_writer = csv.writer(csv_out_fp)
         in_headers = next(csv_reader)
         in_headers[6] = "Difficulty"
-        out_headers = in_headers[:7] + ["Maturity Rating", "Maturity Reason"] + in_headers[7:]
+        out_headers = in_headers[:7] + ["Maturity Rating", "Maturity Reason", "Notes"] + in_headers[7:]
         csv_writer.writerow(out_headers)
         for i, row in enumerate(csv_reader):
             row = [route, location, url, avg_stars, your_stars, route_type, yds_difficulty, pitches, length_ft, area_lat, area_lon] = row
             logger.info("Processing route \"%s\"", route)
             maturity_rating, description, comments, ticks = get_beta(url)
             if not maturity_rating:
-                maturity_rating, maturity_reason = (
+                maturity_rating, maturity_reason, notes = (
                     openai_comment_maturity_assessment(description, comments, ticks) 
                     if comments or ticks 
-                    else ["UNKNOWN", "No comments"]
+                    else ["UNKNOWN", "No comments", "No notes"]
                 )
             else:
                 maturity_reason = "(Route description)"
-            csv_writer.writerow(row[:7] + [maturity_rating, maturity_reason] + row[7:])
+            csv_writer.writerow(row[:7] + [maturity_rating, maturity_reason, notes] + row[7:])
 
 
 if __name__ == "__main__":
     configure_logging(logger)
     process_csv()
+    #_, description, comments, ticks = get_beta("https://www.mountainproject.com/route/106480430/the-ultimate-everything")
+    #print(openai_comment_maturity_assessment(description, comments, ticks))
