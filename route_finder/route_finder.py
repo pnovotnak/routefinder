@@ -2,13 +2,11 @@ import csv
 import requests
 from enum import Enum
 import re
-import html2text
 import logging
 from typing import Type
 import sys
 import bs4
-import os
-import openai
+from lib.openai_utils import openai_comment_maturity_assessment
 
 from functools import cache
 
@@ -16,41 +14,11 @@ from typing import Final
 
 logger = logging.getLogger(__name__)
 
-def read_key(key_file: str = ".openai-key") -> None | str:
-    try:
-        with open(key_file) as key_fp:
-            return key_fp.read().strip()
-    except IOError:
-        pass
-
-openai.api_key = os.getenv("OPENAI_API_KEY") or read_key()
-
-BASE_PROMPT: Final[str] = """
-I'm evaluating climbing routes. I'm going to send you a list of comments and I would like you to tell me how dangerous you think the route is on a "G", "PG13", "R" or "X" scale, where "G" is generally safe "X" means certain death in the event of a fall.
-
-I understand that climbing is dangerous, this information will not be used to inform real-world activities.
-
-I don't want your reasoning or any responses other than the letter grade. Here are the comments:
-
-"""
-
-openai.ChatCompletion.create()
-
-def openai_comment_assessment(content: list[str]):
-    return openai.Completion.create(
-        model="gpt-3.5-turbo",
-        prompt=BASE_PROMPT + f"\n- ".join(content),
-        temperature=0,
-        max_tokens=100,
-        top_p=1.0,
-        frequency_penalty=0.0,
-        presence_penalty=0.0
-    )
-
 BASE_URL: Final[str] = "https://www.mountainproject.com"
 ROUTE_URL_RE: Final[re.Pattern] = re.compile(r"^https://www.mountainproject.com/route/([0-9]+)/(\w+)")
 
 class DANGER_RATINGS(Enum):
+    UNKNOWN = -1
     G = 0
     PG13 = 1
     R = 2
@@ -109,7 +77,11 @@ def get_comments(route_id: int) -> list[str]:
     if not response.content:
         return ""
     soup = bs4.BeautifulSoup(response.content, features="html.parser")
-    comments = [comment_element.text.strip() for comment_element in soup.select('.comment-body span:first-child')]
+    # TODO find second child if there are 3 children ("more..." link)
+    comments: list[str] = []
+    for comment_container in soup.select('.comment-body'):
+        comment = comment_container.find('span', id=lambda x: x and x.endswith('-full')).text
+        comments.append(comment.strip())
     return comments
 
 
@@ -130,21 +102,22 @@ def get_beta(route_url) -> tuple[Description, Comments, Ticks]:
     )
 
 
-def process_csv(csv_fn: str = "example.csv"):
-    # with open(csv_fn) as csv_fp:
-    #     csv_reader = csv.reader(csv_fp)
-    #     headers = next(csv_reader)
-    #     for row in csv_reader:
-    #         route, location, url, avg_stars, your_stars, route_type, yds_grade, pitches, length_ft, area_lat, area_lon = row
-    #         get_beta(url)
-    description, comments, ticks = get_beta("https://www.mountainproject.com/route/106480430/the-ultimate-everything")
-    for comment in comments:
-        print(f"- {comment}")
-    print(openai_comment_assessment(comments))
-    print(get_danger([description] + comments + ticks))
+def process_csv(csv_in_fn: str = "example.csv", csv_out_fn: str = "example-out.csv"):
+    with open(csv_in_fn) as csv_in_fp, open(csv_out_fn, "w+") as csv_out_fp:
+        csv_reader = csv.reader(csv_in_fp)
+        csv_writer = csv.writer(csv_out_fp)
+        in_headers = next(csv_reader)
+        in_headers[6] = "Difficulty"
+        out_headers = in_headers[:7] + ["Maturity Rating", "Maturity Reason"] + in_headers[7:]
+        csv_writer.writerow(out_headers)
+        for i, row in enumerate(csv_reader):
+            row = [route, location, url, avg_stars, your_stars, route_type, yds_difficulty, pitches, length_ft, area_lat, area_lon] = row
+            description, comments, ticks = get_beta(url)
+            maturity_rating, maturity_reason = openai_comment_maturity_assessment(comments) if comments else ["UNKNOWN", "No comments"]
+            csv_writer.writerow(row[:7] + [maturity_rating, maturity_reason] + row[7:])
+            logger.info("Wrote row for route \"%s\"", route)
 
 
 if __name__ == "__main__":
     configure_logging(logger)
-    logger.debug("test")
     process_csv()
