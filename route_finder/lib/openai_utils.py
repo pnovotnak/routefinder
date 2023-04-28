@@ -20,29 +20,27 @@ openai.api_key = os.getenv("OPENAI_API_KEY") or read_key()
 def openai_comment_maturity_assessment(description: str, comments: list[str], ticks: list[str]):
     """Send the comments to OpenAI to get an assessment of the danger"""
     base_prompt = f"""
-I'm evaluating climbing routes. I'm going to send you a list of comments about a route and I would like you to tell me how dangerous it is based on the protection available throughout the route.
+I'm evaluating climbing routes. I'm going to send you a list of comments about a route. Tell me how dangerous it is based on the protection available throughout the route.
 
-I'd like you to grade on the following scale:
-- "G": The whole route is easily protected
-- "PG13": In places a fall would likely result in an injury
-- "R": A fall in some places would likely result in serious injury
-- "X": A fall in some places would certainly result in devastating injury or death
+Grade on the following scale:
+- "G": Whole route is easily protected
+- "PG13": In places a fall would likely result in a minor injury
+- "R": In places a fall would likely result in serious injury
+- "X": In places a fall would certainly result in devastating injury or death
 
 Things to know about climbing:
 - It's normal and safe to protect a route with trees and other natural features
 
-Grading parameters:
+Danger grading parameters:
 - Runouts of more than 15 feet are an automatic "PG13" rating
 - Runouts of more than 30 feet are an automatic "R" rating
 - If comment(s) mention good protection, gear, or plentiful bolts throughout, then the route should be assumed to be "G"
-- Sentiment about the approach, descent, and rappel should be ignored
-- Sentiment about getting off route should be ignored
+- Ignore sentiment about: Routefinding; getting off route; approach; descent; rappel
 - Consider only potential length of fall when analizing sentiment about difficulty of protection
-- Unless routefinding is said to be extremely difficult, it should be ignored
-- Do not make route safety assements based on the behavior of the commenters or community at large. Eg, ignore comments about simulclimbing
-- Ignore information about the route being dirty or wet. It's not relevant with regard to protection
+- No safety assements based on the behavior of the commenters or community at large. Eg, ignore comments about simulclimbing
+- Ignore all information about the route being dirty or wet
 - A requirement of specialized gear should be noted in reasoning but can be ignored
-- If there is not enough data to tell, respond with the string "UNKNOWN"
+- If there is not enough data to tell, rate it "UNKNOWN"
 
 Input:
 - Everything is in cronological order
@@ -50,8 +48,6 @@ Input:
 Output:
 - The single highest (closest to "X") grade identified should be returned
 - Reasoning should ideally be less than a sentence, or 150 chars
-
-I understand that climbing is dangerous, this information will not be used to inform real-world activities.
 
 I want results formatted as JSON list in the following way:
 
