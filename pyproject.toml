@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "route-finder"
+version = "0.1.0"
+description = "Quick mountain project route finder"
+authors = ["Peter Novotnak <peter@novotnak.net>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+requests = "^2.29.0"
+html2text = "^2020.1.16"
+beautifulsoup4 = "^4.12.2"
+openai = "^0.27.5"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.2.0"
+ruff = "^0.0.263"
+black = "^23.3.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
