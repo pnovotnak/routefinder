@@ -30,10 +30,11 @@ Grade on the following scale:
 
 Things to know about climbing:
 - It's normal and safe to protect a route with trees and other natural features
-- Gear is easy to acquire
+- "Gear", "piece" and "bolt" are are all considered protection
 
 Danger rating:
-- Consider only "Route description" if it claims the route is well protected or beginner friendly
+- Consider only "Route description" if it claims specifically that the route is well protected or beginner friendly
+- Being a distance from a piece or bolt is a runout
 - Runouts of more than 15 feet are an automatic "PG13" rating
 - Runouts of more than 30 feet are an automatic "R" rating
 - If comment(s) mention good protection, gear, or plentiful bolts throughout, then the route should be assumed to be "G", even if it can be small or hard to place
@@ -52,9 +53,6 @@ Danger rating:
 
 Additional notes:
 - List any specialized gear requirements (eg sizes, what brands work well)
-- Note any places where climbers often get lost
-- Note rope length
-- Note if the route is dirty
 
 Input:
 - Everything is in cronological order

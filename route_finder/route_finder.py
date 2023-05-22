@@ -134,6 +134,6 @@ def process_csv(csv_in_fn: str = "example.csv", csv_out_fn: str = "example-out.c
 
 if __name__ == "__main__":
     configure_logging(logger)
-    process_csv()
-    #_, description, comments, ticks = get_beta("https://www.mountainproject.com/route/106480430/the-ultimate-everything")
-    #print(openai_comment_maturity_assessment(description, comments, ticks))
+    #process_csv()
+    _, description, comments, ticks = get_beta("https://www.mountainproject.com/route/106188258/over-the-rainbow")
+    print(openai_comment_maturity_assessment(description, comments, ticks))
